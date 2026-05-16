@@ -5,7 +5,7 @@ interface AError {
     stack?: string;
 }
 
-export class ApplicationException extends Error implements AError {
+export default class ApplicationException extends Error implements AError {
     constructor(message: string , public statusCode: number = 500, cause: unknown) {
         super(message , { cause });
         this.name = this.constructor.name;

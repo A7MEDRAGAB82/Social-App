@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "build": "tsc",
-  "start:dev": "cross-env NODE_ENV=development concurrently \"tsc --watch\" \"node --env-file=.env.development --watch dist/main.js\"",
-  "start:prod": "cross-env NODE_ENV=production node dist/main.js"
-},
+    "build": "tsc",
+    "start:dev": "cross-env NODE_ENV=development concurrently \"tsc --watch\" \"node --env-file=.env.development --watch dist/main.js\"",
+    "start:prod": "cross-env NODE_ENV=production node dist/main.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -16,11 +16,15 @@
     "concurrently": "^9.2.1"
   },
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.2",
     "zod": "^4.4.3"
   }

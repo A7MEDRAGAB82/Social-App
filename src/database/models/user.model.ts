@@ -34,7 +34,7 @@ const userSchema = new Schema<IUser>({
     toJSON: { virtuals: true }
 });
 
-userSchema.virtual('username').set(function(this: IUser) {
+userSchema.virtual('fullName').set(function(this: IUser) {
     let fullName = "";
     if (this.firstName) fullName += this.firstName;
     if (this.lastName) fullName += ` ${this.lastName}`;

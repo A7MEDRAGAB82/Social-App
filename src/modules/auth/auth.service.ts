@@ -5,20 +5,26 @@ import { env } from '../../config/env.service';
 import { BadRequestException, conflictException, NotFoundException } from '../../common/exceptions/application.exception';
 import { ProviderEnum, RoleEnum } from '../../common/enums';
 import type { signupDTO, loginDTO } from './auth.dto';
+import { DatabaseRepository } from '../../database/repository/base.repository';
 
 export class AuthService {
-  
+  private userModel = UserModel;
+  private userRepository : DatabaseRepository;
+
+  constructor() {
+    this.userRepository = new DatabaseRepository(this.userModel);
+  }
 
   async signup(data: signupDTO) {
     try {
-      const existingUser = await UserModel.findOne({ email: data.email });
+      const existingUser = await this.userRepository.findOne({ email: data.email });
       if (existingUser) {
         throw new conflictException('User with this email already exists');
       }
 
       const hashedPassword = await bcrypt.hash(data.password, parseInt(env.saltRounds));
 
-      const newUser = await UserModel.create({
+      const newUser = await this.userRepository.create({
         email: data.email,
         password: hashedPassword,
         firstName: data.firstName,
@@ -28,21 +34,16 @@ export class AuthService {
         role: RoleEnum.USER,
       });
 
-      const token = jwt.sign(
-        { id: (newUser as any)._id, email: (newUser as any).email },
-        env.JWT_SECRET_KEY,
-        { expiresIn: '7d' }
-      );
+      
 
       return {
         user: {
-          id: (newUser as any)._id,
-          email: (newUser as any).email,
-          firstName: (newUser as any).firstName,
-          lastName: (newUser as any).lastName,
-          username: (newUser as any).username,
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          username: newUser.username,
         },
-        token,
       };
     } catch (error) {
       throw error;
@@ -52,7 +53,7 @@ export class AuthService {
   
   async login(data: loginDTO) {
     try {
-      const user = await UserModel.findOne({ email: data.email });
+      const user = await this.userRepository.findOne({ email: data.email });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -66,11 +67,6 @@ export class AuthService {
         throw new BadRequestException('Invalid email or password');
       }
 
-      const token = jwt.sign(
-        { id: (user as any)._id, email: (user as any).email },
-        env.JWT_SECRET_KEY,
-        { expiresIn: '7d' }
-      );
 
       return {
         user: {
@@ -78,7 +74,6 @@ export class AuthService {
     email: user.email,
     username: user.username,
   },
-        token,
       };
     } catch (error) {
       throw error;

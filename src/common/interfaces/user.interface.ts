@@ -1,6 +1,7 @@
 import { GenderEnum  , RoleEnum , ProviderEnum } from "../enums";
 
 export interface IUser extends Document {
+    id: any;
     username: string;
     firstName?: string;
     lastName?: string;

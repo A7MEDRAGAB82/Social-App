@@ -7,6 +7,7 @@ import { ProviderEnum, RoleEnum } from '../../common/enums';
 import type { signupDTO, loginDTO } from './auth.dto';
 import { DatabaseRepository } from '../../database/repository/base.repository';
 import { generateHash, compareHash } from '../../common/utils/security';
+import { sendEmail } from '../../common/utils/email/sendEmail';
 
 export class AuthService {
   private userModel = UserModel;
@@ -35,7 +36,13 @@ export class AuthService {
         role: RoleEnum.USER,
       });
 
-      
+      sendEmail({
+        to: newUser.email,
+        subject: 'Welcome to Our Social App!',
+        text: `Hi ${newUser.username},\n\nThank you for signing up for our social app! We're excited to have you on board.\n\nBest regards,\nThe Social App Team`,
+      }).catch((error) => {
+        console.error(`Failed to send welcome email to ${newUser.email}:`, error);
+      });
 
       return {
         user: {

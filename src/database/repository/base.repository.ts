@@ -29,7 +29,13 @@ export class DatabaseRepository<TRawDocs>  {
         return this.model.findByIdAndDelete(id).exec();
     }
     
-
+    async update(filter: Partial<TRawDocs>, data: Partial<TRawDocs>): Promise<{ matchedCount: number; modifiedCount: number }> { 
+    const result = await this.model.updateOne(filter, data).exec();
+    return {
+        matchedCount: result.matchedCount,
+        modifiedCount: result.modifiedCount
+    };
+}
     
 
     

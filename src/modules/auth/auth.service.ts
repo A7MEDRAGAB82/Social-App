@@ -8,13 +8,16 @@ import type { signupDTO, loginDTO } from './auth.dto';
 import { DatabaseRepository } from '../../database/repository/base.repository';
 import { generateHash, compareHash } from '../../common/utils/security';
 import { sendEmail } from '../../common/utils/email/sendEmail';
+import { RedisService } from '../../common/services/redis.service';
 
 export class AuthService {
   private userModel = UserModel;
   private userRepository : DatabaseRepository<typeof UserModel.prototype>;
+  private redisService : RedisService;
 
   constructor() {
     this.userRepository = new DatabaseRepository(this.userModel);
+    this.redisService = new RedisService();
   }
 
   async signup(data: signupDTO) {
@@ -37,7 +40,8 @@ export class AuthService {
       });
 
       let code = Math.floor(100000 + Math.random() * 900000).toString();
-
+      let hashCode = await generateHash({ plainText: code, salt: env.saltRounds });
+      await this.redisService.setValue(`otp:${newUser.id}`, hashCode, 10 * 60); 
       sendEmail({
         to: newUser.email,
         subject: 'Welcome to Our Social App!',
@@ -89,6 +93,30 @@ export class AuthService {
       throw error;
     }
   }
+
+  async verifyEmail(userId: string, code: string) {
+    try {
+      const storedHash = await this.redisService.get(`otp:${userId}`);
+      if (!storedHash) {
+        throw new BadRequestException('Verification code has expired or is invalid');
+      }
+
+      const isCodeValid = await compareHash({ plainText: code, hash: storedHash });
+      if (!isCodeValid) {
+        throw new BadRequestException('Invalid verification code');
+      }
+
+      await this.userRepository.update({ isVerified: true }, { id: userId });
+      await this.redisService.redisDel(`otp:${userId}`);
+      return { message: 'Email verified successfully' };
+    } catch (error) {
+      throw error;
+    }
+
+  }
+
+
+
 }
 
 export const authService = new AuthService();

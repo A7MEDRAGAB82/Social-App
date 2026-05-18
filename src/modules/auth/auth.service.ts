@@ -6,10 +6,11 @@ import { BadRequestException, conflictException, NotFoundException } from '../..
 import { ProviderEnum, RoleEnum } from '../../common/enums';
 import type { signupDTO, loginDTO } from './auth.dto';
 import { DatabaseRepository } from '../../database/repository/base.repository';
+import { generateHash, compareHash } from '../../common/utils/security';
 
 export class AuthService {
   private userModel = UserModel;
-  private userRepository : DatabaseRepository;
+  private userRepository : DatabaseRepository<typeof UserModel.prototype>;
 
   constructor() {
     this.userRepository = new DatabaseRepository(this.userModel);
@@ -22,7 +23,7 @@ export class AuthService {
         throw new conflictException('User with this email already exists');
       }
 
-      const hashedPassword = await bcrypt.hash(data.password, parseInt(env.saltRounds));
+      const hashedPassword = await generateHash({ plainText: data.password, salt: env.saltRounds });
 
       const newUser = await this.userRepository.create({
         email: data.email,
@@ -62,7 +63,7 @@ export class AuthService {
         throw new BadRequestException('User account does not have a password');
       }
 
-      const isPasswordValid = await bcrypt.compare(data.password, (user as any).password);
+      const isPasswordValid = await compareHash({ plainText: data.password, hash: (user as any).password });
       if (!isPasswordValid) {
         throw new BadRequestException('Invalid email or password');
       }

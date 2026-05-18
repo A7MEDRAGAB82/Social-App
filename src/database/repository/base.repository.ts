@@ -3,32 +3,34 @@ import { IUser } from "../../common/interfaces";
 
 
 
-export class DatabaseRepository  {
-    constructor(private model: Model<IUser>) {
+export class DatabaseRepository<TRawDocs>  {
+    constructor(private model: Model<TRawDocs>) {
         this.model = model;
     }
 
-     create(data: Partial<IUser>): Promise<IUser> { 
+     create(data: Partial<TRawDocs>): Promise<TRawDocs> { 
         return this.model.create(data as any);
 
     }
 
-        findOne(filter: Partial<IUser>): Promise<IUser | null> {
+        findOne(filter: Partial<TRawDocs>): Promise<TRawDocs | null> {
         return this.model.findOne(filter as any).exec();
     }
 
-    findById(id: string): Promise<IUser | null> {
+    findById(id: string): Promise<TRawDocs | null> {
         return this.model.findById(id).exec();
     }
 
-    updateById(id: string, data: Partial<IUser>): Promise<IUser | null> {
+    updateById(id: string, data: Partial<TRawDocs>): Promise<TRawDocs | null> {
         return this.model.findByIdAndUpdate(id, data as any, { new: true }).exec();
     }
 
-    deleteById(id: string): Promise<IUser | null> {
+    deleteById(id: string): Promise<TRawDocs | null> {
         return this.model.findByIdAndDelete(id).exec();
     }
+    
 
+    
 
     
 }

@@ -36,10 +36,12 @@ export class AuthService {
         role: RoleEnum.USER,
       });
 
+      let code = Math.floor(100000 + Math.random() * 900000).toString();
+
       sendEmail({
         to: newUser.email,
         subject: 'Welcome to Our Social App!',
-        text: `Hi ${newUser.username},\n\nThank you for signing up for our social app! We're excited to have you on board.\n\nBest regards,\nThe Social App Team`,
+        text: `Hi ${newUser.username},\n\nThank you for signing up for our social app! We're excited to have you on board.\n\nBest regards,\nThe Social App Team , and your verification code is ${code}`,
       }).catch((error) => {
         console.error(`Failed to send welcome email to ${newUser.email}:`, error);
       });

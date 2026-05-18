@@ -13,6 +13,7 @@ const ENC_KEY = process.env.ENC_KEY || "defaultKey";
 const emailUser = process.env.EMAIL_USER as string;
 const emailPassword = process.env.EMAIL_PASS as string;
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000"
+const REDIS_URL = process.env.REDIS_URI || 'redis://localhost:6379';
 
 
 export const env = {
@@ -24,5 +25,6 @@ export const env = {
   ENC_KEY,
   emailUser,
   emailPassword,
-  BASE_URL
+  BASE_URL,
+  REDIS_URL
 };

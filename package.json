@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/redis": "^4.0.10",
     "concurrently": "^9.2.1"
   },
@@ -20,7 +21,6 @@
     "@types/bcrypt": "^6.0.0",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^8.0.0",
     "bcrypt": "^6.0.0",
     "cross-env": "^10.1.0",

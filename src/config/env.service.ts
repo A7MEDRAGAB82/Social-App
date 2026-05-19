@@ -9,6 +9,7 @@ const mood = process.env.MOOD as string;
 const port = process.env.PORT as string;
 const saltRounds = process.env.SALT as string;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY as string;
+const JWT_REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY as string;
 const ENC_KEY = process.env.ENC_KEY || "defaultKey";
 const emailUser = process.env.EMAIL_USER as string;
 const emailPassword = process.env.EMAIL_PASS as string;
@@ -22,6 +23,7 @@ export const env = {
   mood,
   saltRounds,
   JWT_SECRET_KEY,
+  JWT_REFRESH_SECRET_KEY,
   ENC_KEY,
   emailUser,
   emailPassword,

@@ -9,15 +9,18 @@ import { DatabaseRepository } from '../../database/repository/base.repository';
 import { generateHash, compareHash } from '../../common/utils/security';
 import { sendEmail } from '../../common/utils/email/sendEmail';
 import { RedisService } from '../../common/services/redis.service';
+import { TokenService } from '../../common/services/token.service';
 
 export class AuthService {
   private userModel = UserModel;
   private userRepository : DatabaseRepository<typeof UserModel.prototype>;
   private redisService : RedisService;
+  private tokenService : TokenService;
 
   constructor() {
     this.userRepository = new DatabaseRepository(this.userModel);
     this.redisService = new RedisService();
+    this.tokenService = new TokenService();
   }
 
   async signup(data: signupDTO) {
@@ -82,12 +85,18 @@ export class AuthService {
       }
 
 
+      const { accessToken, refreshToken } = this.tokenService.generateTokens({ id: user.id, email: user.email });
+
       return {
         user: {
-    id: user.id,        
-    email: user.email,
-    username: user.username,
-  },
+          id: user.id,
+          email: user.email,
+          username: user.username,
+        },
+        tokens: {
+          accessToken,
+          refreshToken
+        }
       };
     } catch (error) {
       throw error;

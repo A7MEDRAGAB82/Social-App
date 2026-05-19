@@ -68,6 +68,26 @@ router.get("/verify-email", authMiddleware, async (req: Request, res: Response, 
 });
 
 
+router.post("/signup-mail", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { idToken } = req.body;
+    if (typeof idToken !== 'string') {
+      throw new BadRequestException('idToken is required and must be a string');
+    }
+    const result = await authService.signupMail(idToken);
+    successResponse({
+      res,
+      message: "User registered/logged in successfully via Google",
+      statusCode: 200,
+      data: result,
+    });
+  }
+    catch (error) {
+      next(error);
+    }
+});
+
+
 
 
 export default router;

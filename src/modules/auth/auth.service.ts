@@ -10,6 +10,7 @@ import { generateHash, compareHash } from '../../common/utils/security';
 import { sendEmail } from '../../common/utils/email/sendEmail';
 import { RedisService } from '../../common/services/redis.service';
 import { TokenService } from '../../common/services/token.service';
+import { OAuth2Client } from 'google-auth-library';
 
 
 export class AuthService {
@@ -17,11 +18,13 @@ export class AuthService {
   private userRepository : DatabaseRepository<typeof UserModel.prototype>;
   private redisService : RedisService;
   private tokenService : TokenService;
+  private googleClient: OAuth2Client;
 
   constructor() {
     this.userRepository = new DatabaseRepository(this.userModel);
     this.redisService = new RedisService();
     this.tokenService = new TokenService();
+    this.googleClient = new OAuth2Client(env.googleClientId, env.googleClientSecret);
   }
 
   async signup(data: signupDTO) {
@@ -125,7 +128,66 @@ export class AuthService {
 
   }
 
+  async signupMail(idToken: string)  : Promise<{ user: { id: string; email: string; username: string }; tokens: { accessToken: string; refreshToken: string } }> {
+   try {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: env.googleClientId,
+    });
+    
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new BadRequestException('Invalid Google token');
+    }
+    
+    const email = payload.email;
+    if (!email) {
+      throw new BadRequestException('Google token payload missing email');
+    }
 
+    let user = await this.userRepository.findOne({ email });
+
+    if (!user) {
+      const firstName = payload.given_name ?? '';
+      const lastName = payload.family_name ?? '';
+      const usernameBase = firstName || email.split('@')[0] || 'user';
+
+      user = await this.userRepository.create({
+        email,
+        firstName,
+        lastName,
+        username: `${usernameBase.toLowerCase()}${Date.now()}`,
+        provider: ProviderEnum.GOOGLE,
+        role: RoleEnum.USER,
+      });
+    } else {
+      if (user.provider !== ProviderEnum.GOOGLE) {
+        throw new BadRequestException('This email is registered via password. Please log in using your password.');
+      }
+    }
+
+    const { accessToken, refreshToken } = this.tokenService.generateTokens({ 
+      id: user.id, 
+      email: user.email 
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+      tokens: {
+        accessToken,
+        refreshToken
+      }
+    };
+
+  } catch (error) {
+    throw error;
+  }
+
+  }
 
 }
 

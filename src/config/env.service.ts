@@ -15,6 +15,8 @@ const emailUser = process.env.EMAIL_USER as string;
 const emailPassword = process.env.EMAIL_PASS as string;
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000"
 const REDIS_URL = process.env.REDIS_URI || 'redis://localhost:6379';
+const googleClientId = process.env.GOOGLE_CLIENT_ID as string;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET as string;
 
 
 export const env = {
@@ -28,5 +30,7 @@ export const env = {
   emailUser,
   emailPassword,
   BASE_URL,
-  REDIS_URL
+  REDIS_URL,
+  googleClientId,
+  googleClientSecret
 };

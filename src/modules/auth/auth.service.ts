@@ -11,6 +11,7 @@ import { sendEmail } from '../../common/utils/email/sendEmail';
 import { RedisService } from '../../common/services/redis.service';
 import { TokenService } from '../../common/services/token.service';
 
+
 export class AuthService {
   private userModel = UserModel;
   private userRepository : DatabaseRepository<typeof UserModel.prototype>;

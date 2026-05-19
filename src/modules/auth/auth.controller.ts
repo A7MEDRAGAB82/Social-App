@@ -5,6 +5,7 @@ import { signupSchema, loginSchema } from "./auth.validation";
 import { validateRequest } from "../../middleware/validation.middleware";
 import { successResponse } from "../../common/success/success.response";
 import { BadRequestException } from "../../common/exceptions/application.exception";
+import { authMiddleware } from "../../middleware/auth.middleware";
 
 const router : Router = Router();
 
@@ -32,6 +33,7 @@ router.post(
 router.post(
   "/login",
   validateRequest(loginSchema),
+  authMiddleware,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const data = req.body;
@@ -48,7 +50,7 @@ router.post(
   }
 );
 
-router.get("/verify-email", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.get("/verify-email", authMiddleware, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { userId, code } = req.query;
       if (typeof userId !== 'string' || typeof code !== 'string') {

@@ -10,7 +10,10 @@ import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enums";
 const userSchema = new Schema<IUser>({
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
+    firstName: { type: String, trim: true },
+    lastName: { type: String, trim: true },
     password: { type: String, required: function(this: IUser) { return this.provider === ProviderEnum.LOCAL; } },
+    isVerified: { type: Boolean, default: false },
     gender: { 
         type: String, 
         enum: Object.values(GenderEnum), 

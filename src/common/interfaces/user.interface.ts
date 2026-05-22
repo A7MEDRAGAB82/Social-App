@@ -7,8 +7,9 @@ export interface IUser extends Document {
     lastName?: string;
     fullName?: string;
     email: string;
-    password?: string; 
-    gender: GenderEnum ;
+    password?: string;
+    isVerified: boolean;
+    gender: GenderEnum;
     role: RoleEnum;
     phoneNumber?: string;
     profilePicture?: string;

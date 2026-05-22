@@ -1,0 +1,20 @@
+import { GenderEnum  , RoleEnum , ProviderEnum } from "../enums";
+
+export interface IUser extends Document {
+    id: any;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+    fullName?: string;
+    email: string;
+    password?: string;
+    isVerified: boolean;
+    gender: GenderEnum;
+    role: RoleEnum;
+    phoneNumber?: string;
+    profilePicture?: string;
+    profileCoverPicture?: string;
+    provider: ProviderEnum;
+    createdAt: Date;
+    updatedAt: Date;
+}

@@ -5,6 +5,7 @@ import { errorMiddleware } from "./middleware/error.middleware";
 import {env} from "./config/env.service";
 import DBconnection from "./database/connection";
 import { redisService } from "./common/services/redis.service";
+import { userRouter } from "./modules/user";
 
 
 export const bootstrap = () => {
@@ -15,6 +16,7 @@ export const bootstrap = () => {
     DBconnection();
     redisService.connect();
     app.use("/auth", authRouter)
+    app.use("/user", userRouter)
   app.use(errorMiddleware);
     app.listen(env.port, () => {
         console.log(`Server is running on port ${env.port}`);

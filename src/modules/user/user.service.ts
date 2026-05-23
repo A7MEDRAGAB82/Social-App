@@ -18,6 +18,17 @@ export class UserService {
     if ((userData as { password?: string }).password) delete (userData as { password?: string }).password;
     return userData;
   }
+
+  async updateUserProfile(userId: string, updateData: Partial<IUser>): Promise<IUser> {
+    let userData = await this.userRepository.updateById(userId, updateData);
+    if (!userData) {
+      throw new NotFoundException("User not found");
+    }
+    if ((userData as { password?: string }).password) delete (userData as { password?: string }).password;
+    return userData;
+  
+}
+
 }
 
 export const userService = new UserService();

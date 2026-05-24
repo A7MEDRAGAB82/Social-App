@@ -17,6 +17,11 @@ const BASE_URL = process.env.BASE_URL || "http://localhost:3000"
 const REDIS_URL = process.env.REDIS_URI || 'redis://localhost:6379';
 const googleClientId = process.env.GOOGLE_CLIENT_ID as string;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET as string;
+const AWS_REGION = process.env.AWS_REGION as string;
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID as string;
+const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY as string;
+const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME as string;
+const AWS_S3_BASE_URL = process.env.AWS_S3_BASE_URL as string | undefined;
 
 
 export const env = {
@@ -32,5 +37,10 @@ export const env = {
   BASE_URL,
   REDIS_URL,
   googleClientId,
-  googleClientSecret
+  googleClientSecret,
+  AWS_REGION,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  AWS_S3_BUCKET_NAME,
+  AWS_S3_BASE_URL,
 };

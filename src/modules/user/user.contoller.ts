@@ -3,13 +3,27 @@ import type { Request, Response, NextFunction } from "express";
 import { userService } from "./user.service";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { successResponse } from "../../common/success/success.response";
-import { getPublicUploadPath, uploadFile } from "../../common/utils/multer/cloud";
-import { MulterEnum } from "../../common/enums/multer.enum";
+import { uploadFile } from "../../common/utils/multer/cloud";
 import { BadRequestException } from "../../common/exceptions/application.exception";
+import { s3Service } from "../../common/services/s3.service";
 
 const router: Router = Router();
 
-const diskUpload = uploadFile()({ storageKey: MulterEnum.diskStorage });
+const memoryUpload = uploadFile();
+
+const uploadUserImage = async (
+  userId: string,
+  file: Express.Multer.File,
+  folder: "profile-pictures" | "cover-pictures"
+): Promise<string> => {
+  const key = s3Service.buildUserImageKey(userId, folder, file.originalname);
+
+  return s3Service.upload({
+    buffer: file.buffer,
+    key,
+    contentType: file.mimetype,
+  });
+};
 
 router.get(
   "/profile",
@@ -33,19 +47,21 @@ router.get(
 router.patch(
   "/profile",
   authMiddleware,
-  diskUpload.single("profilePicture"),
+  memoryUpload.single("profilePicture"),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const userId = req.user?.id as string;
       const updateData: Partial<typeof req.body> = { ...req.body };
 
       if (req.file) {
-        updateData.profilePicture = getPublicUploadPath(req.file);
+        updateData.profilePicture = await uploadUserImage(
+          userId,
+          req.file,
+          "profile-pictures"
+        );
       }
 
-      const userData = await userService.updateUserProfile(
-        req.user?.id as string,
-        updateData
-      );
+      const userData = await userService.updateUserProfile(userId, updateData);
 
       successResponse({
         res,
@@ -62,16 +78,23 @@ router.patch(
 router.patch(
   "/profile/cover",
   authMiddleware,
-  diskUpload.single("profileCoverPicture"),
+  memoryUpload.single("profileCoverPicture"),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.file) {
         throw new BadRequestException("Cover picture file is required");
       }
 
+      const userId = req.user?.id as string;
+      const coverUrl = await uploadUserImage(
+        userId,
+        req.file,
+        "cover-pictures"
+      );
+
       const userData = await userService.updateProfileCoverPicture(
-        req.user?.id as string,
-        getPublicUploadPath(req.file)
+        userId,
+        coverUrl
       );
 
       successResponse({

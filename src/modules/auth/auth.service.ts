@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import UserModel from '../../database/models/user.model';
 import { env } from '../../config/env.service';
@@ -16,7 +15,7 @@ import type { IUser } from '../../common/interfaces/user.interface';
 
 export class AuthService {
   private userModel = UserModel;
-  private userRepository : DatabaseRepository<typeof UserModel.prototype>;
+  private userRepository: DatabaseRepository<IUser>;
   private redisService : RedisService;
   private tokenService : TokenService;
   private googleClient: OAuth2Client;
@@ -243,7 +242,7 @@ export class AuthService {
         throw new BadRequestException('Invalid verification code');
       }
 
-      await this.userRepository.update({ isVerified: true }, { id: userId });
+      await this.userRepository.updateById(userId, { isVerified: true });
       await this.redisService.redisDel(`otp:${userId}`);
       return { message: 'Email verified successfully' };
     } catch (error) {

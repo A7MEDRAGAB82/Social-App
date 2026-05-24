@@ -1,9 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { IUser } from "../../common/interfaces/user.interface";
 import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enums";
-import {generateHash} from "../../common/utils/security/hash.security";
-import { env } from "../../config/env.service";
-
 
 
 
@@ -30,6 +27,9 @@ const userSchema = new Schema<IUser>({
         enum: Object.values(ProviderEnum), 
         default: ProviderEnum.LOCAL 
     },
+    phoneNumber: { type: String, trim: true },
+    profilePicture: { type: String },
+    profileCoverPicture: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now } 
 }, {
@@ -38,9 +38,6 @@ const userSchema = new Schema<IUser>({
     toJSON: { virtuals: true }
 });
 
-userSchema.pre<IUser>('save', async function(next) {
-    this.password = await generateHash({plainText: this.password as string}, env.saltRounds, {plainText: this.password as string, salt: env.saltRounds});
-});
 
 
 userSchema.virtual('fullName').set(function(this: IUser) {

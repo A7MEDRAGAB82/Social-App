@@ -1,5 +1,6 @@
 import express from "express";
 import type { Express, Request, Response } from "express";
+import path from "path";
 import { authRouter } from "./modules/auth";
 import { errorMiddleware } from "./middleware/error.middleware";
 import {env} from "./config/env.service";
@@ -13,6 +14,7 @@ export const bootstrap = () => {
 
     
     app.use(express.json());
+    app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
     DBconnection();
     redisService.connect();
     app.use("/auth", authRouter)

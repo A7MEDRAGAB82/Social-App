@@ -3,6 +3,8 @@ import UserModel from "../../database/models/user.model";
 import { DatabaseRepository } from "../../database/repository/base.repository";
 import { NotFoundException } from "../../common/exceptions/application.exception";
 
+type ProfileImageField = "profilePicture" | "profileCoverPicture";
+
 export class UserService {
   private userRepository: DatabaseRepository<IUser>;
 
@@ -10,25 +12,61 @@ export class UserService {
     this.userRepository = new DatabaseRepository<IUser>(UserModel);
   }
 
-  async getUserProfile(userId: string): Promise<IUser> {
-    let userData = await this.userRepository.findById(userId);
-    if (!userData) {
-      throw new NotFoundException("User not found");
+  private sanitizeUser(user: IUser): IUser {
+    if (user.password) {
+      delete user.password;
     }
-    if ((userData as { password?: string }).password) delete (userData as { password?: string }).password;
-    return userData;
+    return user;
   }
 
-  async updateUserProfile(userId: string, updateData: Partial<IUser>): Promise<IUser> {
-    let userData = await this.userRepository.updateById(userId, updateData);
+  private async updateProfileImage(
+    userId: string,
+    field: ProfileImageField,
+    imagePath: string
+  ): Promise<IUser> {
+    const userData = await this.userRepository.updateById(userId, {
+      [field]: imagePath,
+    });
+
     if (!userData) {
       throw new NotFoundException("User not found");
     }
-    if ((userData as { password?: string }).password) delete (userData as { password?: string }).password;
-    return userData;
-  
-}
 
+    return this.sanitizeUser(userData);
+  }
+
+  async getUserProfile(userId: string): Promise<IUser> {
+    const userData = await this.userRepository.findById(userId);
+    if (!userData) {
+      throw new NotFoundException("User not found");
+    }
+    return this.sanitizeUser(userData);
+  }
+
+  async updateUserProfile(
+    userId: string,
+    updateData: Partial<IUser>
+  ): Promise<IUser> {
+    const userData = await this.userRepository.updateById(userId, updateData);
+    if (!userData) {
+      throw new NotFoundException("User not found");
+    }
+    return this.sanitizeUser(userData);
+  }
+
+  async updateProfilePicture(
+    userId: string,
+    imagePath: string
+  ): Promise<IUser> {
+    return this.updateProfileImage(userId, "profilePicture", imagePath);
+  }
+
+  async updateProfileCoverPicture(
+    userId: string,
+    imagePath: string
+  ): Promise<IUser> {
+    return this.updateProfileImage(userId, "profileCoverPicture", imagePath);
+  }
 }
 
 export const userService = new UserService();

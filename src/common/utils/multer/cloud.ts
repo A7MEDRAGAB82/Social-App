@@ -1,32 +1,33 @@
 import multer from 'multer';
-import {tmpdir} from 'os';
+import path from 'path';
+import { mkdirSync } from 'fs';
 import { MulterEnum } from '../../enums/multer.enum';
 
-export const uploadFile = ()=>({
-    storageKey = MulterEnum.memoryStorage
-}:
-  {
-    storageKey?: MulterEnum
-  } )=>{
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
-  
+export const getPublicUploadPath = (file: Express.Multer.File): string =>
+  path.posix.join('uploads', file.filename);
 
+export const uploadFile = () => ({
+  storageKey = MulterEnum.memoryStorage,
+}: {
+  storageKey?: MulterEnum;
+}) => {
+  const storage =
+    storageKey === MulterEnum.diskStorage
+      ? multer.diskStorage({
+          destination(_req, _file, cb) {
+            mkdirSync(UPLOADS_DIR, { recursive: true });
+            cb(null, UPLOADS_DIR);
+          },
+          filename(_req, file, cb) {
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
+          },
+        })
+      : multer.memoryStorage();
 
-   // const storage : multer.StorageEngine = multer.memoryStorage();
-
-   const storage = storageKey === MulterEnum.diskStorage ? multer.diskStorage({
-        destination: function (req, file, cb) {
-            cb(null, tmpdir());
-        },
-        filename: function (req, file, cb) {
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, file.fieldname + '-' + uniqueSuffix + '-' + file.originalname);
-        }
-    }) : multer.memoryStorage();
-    
-
-   
-   return multer({ storage });
-}
+  return multer({ storage });
+};
 
 

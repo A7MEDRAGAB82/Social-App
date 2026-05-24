@@ -2,8 +2,21 @@ import { IUser } from "../../common/interfaces";
 import UserModel from "../../database/models/user.model";
 import { DatabaseRepository } from "../../database/repository/base.repository";
 import { NotFoundException } from "../../common/exceptions/application.exception";
+import {
+  PresignedUploadResult,
+  ProfileImageFolder,
+  s3Service,
+} from "../../common/services/s3.service";
 
 type ProfileImageField = "profilePicture" | "profileCoverPicture";
+
+const IMAGE_FIELD_BY_FOLDER: Record<
+  ProfileImageFolder,
+  ProfileImageField
+> = {
+  "profile-pictures": "profilePicture",
+  "cover-pictures": "profileCoverPicture",
+};
 
 export class UserService {
   private userRepository: DatabaseRepository<IUser>;
@@ -22,10 +35,10 @@ export class UserService {
   private async updateProfileImage(
     userId: string,
     field: ProfileImageField,
-    imagePath: string
+    imageUrl: string
   ): Promise<IUser> {
     const userData = await this.userRepository.updateById(userId, {
-      [field]: imagePath,
+      [field]: imageUrl,
     });
 
     if (!userData) {
@@ -54,18 +67,42 @@ export class UserService {
     return this.sanitizeUser(userData);
   }
 
+  async getPresignedProfileImageUpload(
+    userId: string,
+    folder: ProfileImageFolder,
+    fileName: string,
+    contentType: string
+  ): Promise<PresignedUploadResult> {
+    const key = s3Service.buildUserImageKey(userId, folder, fileName);
+
+    return s3Service.getPresignedUploadUrl({ key, contentType });
+  }
+
+  async confirmProfileImageUpload(
+    userId: string,
+    folder: ProfileImageFolder,
+    key: string
+  ): Promise<IUser> {
+    s3Service.assertUserImageKey(userId, key, folder);
+
+    const imageUrl = s3Service.getPublicUrl(key);
+    const field = IMAGE_FIELD_BY_FOLDER[folder];
+
+    return this.updateProfileImage(userId, field, imageUrl);
+  }
+
   async updateProfilePicture(
     userId: string,
-    imagePath: string
+    imageUrl: string
   ): Promise<IUser> {
-    return this.updateProfileImage(userId, "profilePicture", imagePath);
+    return this.updateProfileImage(userId, "profilePicture", imageUrl);
   }
 
   async updateProfileCoverPicture(
     userId: string,
-    imagePath: string
+    imageUrl: string
   ): Promise<IUser> {
-    return this.updateProfileImage(userId, "profileCoverPicture", imagePath);
+    return this.updateProfileImage(userId, "profileCoverPicture", imageUrl);
   }
 }
 

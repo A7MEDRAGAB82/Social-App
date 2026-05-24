@@ -2,10 +2,15 @@ import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { userService } from "./user.service";
 import { authMiddleware } from "../../middleware/auth.middleware";
+import { validateRequest } from "../../middleware/validation.middleware";
 import { successResponse } from "../../common/success/success.response";
 import { uploadFile } from "../../common/utils/multer/cloud";
 import { BadRequestException } from "../../common/exceptions/application.exception";
 import { s3Service } from "../../common/services/s3.service";
+import {
+  confirmUploadSchema,
+  presignUploadSchema,
+} from "./user.validation";
 
 const router: Router = Router();
 
@@ -35,6 +40,106 @@ router.get(
       successResponse({
         res,
         message: "User profile retrieved successfully",
+        statusCode: 200,
+        data: userData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post(
+  "/profile/presign",
+  authMiddleware,
+  validateRequest(presignUploadSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { fileName, contentType } = req.body;
+      const presignedData = await userService.getPresignedProfileImageUpload(
+        req.user?.id as string,
+        "profile-pictures",
+        fileName,
+        contentType
+      );
+
+      successResponse({
+        res,
+        message: "Presigned upload URL generated successfully",
+        statusCode: 200,
+        data: presignedData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post(
+  "/profile/cover/presign",
+  authMiddleware,
+  validateRequest(presignUploadSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { fileName, contentType } = req.body;
+      const presignedData = await userService.getPresignedProfileImageUpload(
+        req.user?.id as string,
+        "cover-pictures",
+        fileName,
+        contentType
+      );
+
+      successResponse({
+        res,
+        message: "Presigned cover upload URL generated successfully",
+        statusCode: 200,
+        data: presignedData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.patch(
+  "/profile/confirm",
+  authMiddleware,
+  validateRequest(confirmUploadSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userData = await userService.confirmProfileImageUpload(
+        req.user?.id as string,
+        "profile-pictures",
+        req.body.key
+      );
+
+      successResponse({
+        res,
+        message: "Profile picture updated successfully",
+        statusCode: 200,
+        data: userData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.patch(
+  "/profile/cover/confirm",
+  authMiddleware,
+  validateRequest(confirmUploadSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userData = await userService.confirmProfileImageUpload(
+        req.user?.id as string,
+        "cover-pictures",
+        req.body.key
+      );
+
+      successResponse({
+        res,
+        message: "Profile cover picture updated successfully",
         statusCode: 200,
         data: userData,
       });

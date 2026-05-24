@@ -3,12 +3,29 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "../../config/env.service";
+import { BadRequestException } from "../exceptions/application.exception";
+
+export type ProfileImageFolder = "profile-pictures" | "cover-pictures";
 
 export interface UploadToS3Params {
   buffer: Buffer;
   key: string;
   contentType: string;
+}
+
+export interface PresignedUploadResult {
+  uploadUrl: string;
+  key: string;
+  publicUrl: string;
+  expiresIn: number;
+}
+
+export interface PresignedUploadParams {
+  key: string;
+  contentType: string;
+  expiresIn?: number;
 }
 
 export class S3Service {
@@ -28,11 +45,23 @@ export class S3Service {
 
   buildUserImageKey(
     userId: string,
-    folder: "profile-pictures" | "cover-pictures",
+    folder: ProfileImageFolder,
     originalName: string
   ): string {
     const safeName = originalName.replace(/[^\w.-]/g, "_");
     return `users/${userId}/${folder}/${Date.now()}-${safeName}`;
+  }
+
+  assertUserImageKey(
+    userId: string,
+    key: string,
+    folder: ProfileImageFolder
+  ): void {
+    const expectedPrefix = `users/${userId}/${folder}/`;
+
+    if (!key.startsWith(expectedPrefix)) {
+      throw new BadRequestException("Invalid image key for this user");
+    }
   }
 
   getPublicUrl(key: string): string {
@@ -40,6 +69,27 @@ export class S3Service {
       return `${env.AWS_S3_BASE_URL.replace(/\/$/, "")}/${key}`;
     }
     return `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
+  }
+
+  async getPresignedUploadUrl({
+    key,
+    contentType,
+    expiresIn = env.AWS_S3_PRESIGN_EXPIRES_IN,
+  }: PresignedUploadParams): Promise<PresignedUploadResult> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn });
+
+    return {
+      uploadUrl,
+      key,
+      publicUrl: this.getPublicUrl(key),
+      expiresIn,
+    };
   }
 
   async upload({

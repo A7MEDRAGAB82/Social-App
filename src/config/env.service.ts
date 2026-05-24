@@ -22,6 +22,9 @@ const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID as string;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY as string;
 const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME as string;
 const AWS_S3_BASE_URL = process.env.AWS_S3_BASE_URL as string | undefined;
+const AWS_S3_PRESIGN_EXPIRES_IN = Number(
+  process.env.AWS_S3_PRESIGN_EXPIRES_IN ?? 900
+);
 
 
 export const env = {
@@ -43,4 +46,5 @@ export const env = {
   AWS_SECRET_ACCESS_KEY,
   AWS_S3_BUCKET_NAME,
   AWS_S3_BASE_URL,
+  AWS_S3_PRESIGN_EXPIRES_IN,
 };

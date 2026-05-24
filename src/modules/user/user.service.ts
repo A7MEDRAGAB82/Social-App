@@ -3,10 +3,10 @@ import UserModel from "../../database/models/user.model";
 import { DatabaseRepository } from "../../database/repository/base.repository";
 import { NotFoundException } from "../../common/exceptions/application.exception";
 import {
-  PresignedUploadResult,
   ProfileImageFolder,
   s3Service,
 } from "../../common/services/s3.service";
+import { PresignedUploadResult } from "../../common/interfaces/s3.interface";
 
 type ProfileImageField = "profilePicture" | "profileCoverPicture";
 

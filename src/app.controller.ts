@@ -14,6 +14,14 @@ export const bootstrap = () => {
     
     app.use(express.json());
     DBconnection();
+
+    app.get('/uploads/*path' , (req: Request, res: Response) => {
+        return res.sendFile(req.params.path as string, { root: env.UPLOADS_DIR }, (err) => {
+            if (err) {
+                res.status(404).json({ message: "File not found" });
+            }
+        });
+    });
     redisService.connect();
     app.use("/auth", authRouter)
     app.use("/user", userRouter)

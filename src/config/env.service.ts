@@ -25,6 +25,7 @@ const AWS_S3_BASE_URL = process.env.AWS_S3_BASE_URL as string | undefined;
 const AWS_S3_PRESIGN_EXPIRES_IN = Number(
   process.env.AWS_S3_PRESIGN_EXPIRES_IN ?? 900
 );
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, "../uploads");
 
 
 export const env = {
@@ -47,4 +48,5 @@ export const env = {
   AWS_S3_BUCKET_NAME,
   AWS_S3_BASE_URL,
   AWS_S3_PRESIGN_EXPIRES_IN,
+  UPLOADS_DIR
 };

@@ -1,32 +1,27 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
+  type GetObjectCommandOutput,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "../../config/env.service";
-import { BadRequestException } from "../exceptions/application.exception";
+import { Readable } from "node:stream";
+import {
+  BadRequestException,
+  NotFoundException,
+} from "../exceptions/application.exception";
+import {
+  UploadToS3Params,
+  PresignedUploadParams,
+  PresignedUploadResult,
+  S3AssetResult,
+} from "../interfaces/s3.interface";
 
 export type ProfileImageFolder = "profile-pictures" | "cover-pictures";
 
-export interface UploadToS3Params {
-  buffer: Buffer;
-  key: string;
-  contentType: string;
-}
 
-export interface PresignedUploadResult {
-  uploadUrl: string;
-  key: string;
-  publicUrl: string;
-  expiresIn: number;
-}
-
-export interface PresignedUploadParams {
-  key: string;
-  contentType: string;
-  expiresIn?: number;
-}
 
 export class S3Service {
   private readonly client: S3Client;
@@ -116,6 +111,100 @@ export class S3Service {
         Key: key,
       })
     );
+  }
+
+  private async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks);
+  }
+
+  private async bodyToBuffer(
+    body: GetObjectCommandOutput["Body"]
+  ): Promise<Buffer> {
+    if (
+      body &&
+      typeof body === "object" &&
+      "transformToByteArray" in body &&
+      typeof body.transformToByteArray === "function"
+    ) {
+      const bytes = await body.transformToByteArray();
+      return Buffer.from(bytes);
+    }
+
+    if (body instanceof Readable) {
+      return this.streamToBuffer(body);
+    }
+
+    throw new BadRequestException("Unable to read asset from storage");
+  }
+
+  private isS3NotFoundError(error: unknown): boolean {
+    return (
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error.name === "NoSuchKey" || error.name === "NotFound")
+    );
+  }
+
+  async getAsset(key: string): Promise<S3AssetResult> {
+    if (!key?.trim()) {
+      throw new BadRequestException("Asset key is required");
+    }
+
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+        })
+      );
+
+      if (!response.Body) {
+        throw new NotFoundException("Asset not found");
+      }
+
+      const buffer = await this.bodyToBuffer(response.Body);
+
+      const asset: S3AssetResult = { buffer };
+
+      if (response.ContentType) {
+        asset.contentType = response.ContentType;
+      }
+      if (response.ContentLength !== undefined) {
+        asset.contentLength = response.ContentLength;
+      }
+
+      return asset;
+    } catch (error) {
+      if (this.isS3NotFoundError(error)) {
+        throw new NotFoundException("Asset not found", error);
+      }
+      throw error;
+    }
+  }
+
+  async getPresignedDownloadUrl(
+    key: string,
+    expiresIn = env.AWS_S3_PRESIGN_EXPIRES_IN
+  ): Promise<{ downloadUrl: string; key: string; expiresIn: number }> {
+    if (!key?.trim()) {
+      throw new BadRequestException("Asset key is required");
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+
+    const downloadUrl = await getSignedUrl(this.client, command, { expiresIn });
+
+    return { downloadUrl, key, expiresIn };
   }
 }
 

@@ -6,6 +6,7 @@ import { env } from "./config/env.service";
 import DBconnection from "./database/connection";
 import { redisService } from "./common/services/redis.service";
 import { userRouter } from "./modules/user";
+import { postsRouter } from "./modules/posts";
 import { s3Service } from "./common/services/s3.service";
 import { BadRequestException } from "./common/exceptions/application.exception";
 
@@ -67,6 +68,7 @@ export const bootstrap = () => {
   redisService.connect();
   app.use("/auth", authRouter);
   app.use("/user", userRouter);
+  app.use("/posts", postsRouter);
   app.use(errorMiddleware);
 
   app.listen(env.port, () => {

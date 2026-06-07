@@ -1,8 +1,6 @@
 import { createClient, RedisClientType } from 'redis';
 import { env } from '../../config/env.service';
-import th from 'zod/v4/locales/th.js';
 import { Types } from 'mongoose';
-import { keyof } from 'zod';
 
 export class RedisService {
     private client: RedisClientType

@@ -5,8 +5,6 @@ import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enums";
 
 
 
-
-
 const userSchema = new Schema<IUser>({
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
@@ -29,6 +27,9 @@ const userSchema = new Schema<IUser>({
         enum: Object.values(ProviderEnum), 
         default: ProviderEnum.LOCAL 
     },
+    phoneNumber: { type: String, trim: true },
+    profilePicture: { type: String },
+    profileCoverPicture: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now } 
 }, {
@@ -36,6 +37,8 @@ const userSchema = new Schema<IUser>({
     toObject: { virtuals: true },
     toJSON: { virtuals: true }
 });
+
+
 
 userSchema.virtual('fullName').set(function(this: IUser) {
     let fullName = "";

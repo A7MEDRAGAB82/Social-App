@@ -9,6 +9,7 @@ import { userRouter } from "./modules/user";
 import { postsRouter } from "./modules/posts";
 import { s3Service } from "./common/services/s3.service";
 import { BadRequestException } from "./common/exceptions/application.exception";
+import { initializeGraphQL } from "./graphql";
 
 const resolveUploadKey = (req: Request): string => {
   if (typeof req.query.key === "string" && req.query.key.trim()) {
@@ -66,9 +67,15 @@ export const bootstrap = () => {
   );
 
   redisService.connect();
+
+  // Initialize GraphQL
+  initializeGraphQL(app);
+
   app.use("/auth", authRouter);
   app.use("/user", userRouter);
   app.use("/posts", postsRouter);
+  
+
   app.use(errorMiddleware);
 
   app.listen(env.port, () => {

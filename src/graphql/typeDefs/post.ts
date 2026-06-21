@@ -11,13 +11,13 @@ export const postTypeDefs = gql`
     comments: Int
   }
 
-  type Query {
+  extend type Query {
     getPost(id: ID!): Post
     getAllPosts(limit: Int, offset: Int): [Post]!
     getUserPosts(userId: ID!, limit: Int, offset: Int): [Post]!
   }
 
-  type Mutation {
+  extend type Mutation {
     createPost(content: String!): Post
     updatePost(id: ID!, content: String!): Post
     deletePost(id: ID!): Boolean

@@ -10,6 +10,8 @@ import { postsRouter } from "./modules/posts";
 import { s3Service } from "./common/services/s3.service";
 import { BadRequestException } from "./common/exceptions/application.exception";
 import { initializeGraphQL } from "./graphql";
+import {Server} from "socket.io"
+import { connections } from "mongoose";
 
 const resolveUploadKey = (req: Request): string => {
   if (typeof req.query.key === "string" && req.query.key.trim()) {
@@ -78,7 +80,20 @@ export const bootstrap = () => {
 
   app.use(errorMiddleware);
 
-  app.listen(env.port, () => {
+ const httpServer = app.listen(env.port, () => {
     console.log(`Server is running on port ${env.port}`);
   });
+
+
+  const io = new Server(httpServer)
+
+  io.on("connection", (socket) => {
+    connections.push(socket.id)
+    console.log(socket)
+  });
+
+ 
+  
+
+
 };

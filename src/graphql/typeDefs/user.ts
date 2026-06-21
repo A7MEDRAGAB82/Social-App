@@ -19,13 +19,13 @@ export const userTypeDefs = gql`
     updatedAt: String!
   }
 
-  type Query {
+  extend type Query {
     getUser(id: ID!): User
     getCurrentUser: User
     getUserByEmail(email: String!): User
   }
 
-  type Mutation {
+  extend type Mutation {
     updateUserProfile(
       firstName: String
       lastName: String
